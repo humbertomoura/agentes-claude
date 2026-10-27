@@ -165,4 +165,24 @@ class EmprestimoControllerIT {
         .andExpect(jsonPath("$.renovacoes").value(0));
     mvc.perform(get("/emprestimos/3")).andExpect(jsonPath("$.vencimento").value("2026-10-12"));
   }
+
+  @Test
+  void repetirExtravioDevolve409() throws Exception {
+    String local = emprestar(novoLivro(1), 2);
+
+    mvc.perform(patch(local + "/extravio"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("EXTRAVIADO"));
+    mvc.perform(patch(local + "/extravio")).andExpect(status().isConflict());
+  }
+
+  @Test
+  void copiaExtraviadaNaoVoltaParaOAcervo() throws Exception {
+    long livro = novoLivro(1);
+    String local = emprestar(livro, 1);
+
+    mvc.perform(patch(local + "/extravio")).andExpect(status().isOk());
+
+    mvc.perform(get("/livros/" + livro)).andExpect(jsonPath("$.disponiveis").value(0));
+  }
 }

@@ -176,4 +176,34 @@ class EmprestimoServiceTest {
     assertThat(e.getMultaCobrada()).isEqualByComparingTo(new BigDecimal("3.00"));
     assertThat(service.calcularMulta(e)).isEqualByComparingTo(new BigDecimal("3.00"));
   }
+
+  @Test
+  void deveRegistrarExtravioDeEmprestimoAberto() {
+    Emprestimo e = new Emprestimo(livro, leitor, HOJE.minusDays(5));
+    when(repository.findById(1L)).thenReturn(Optional.of(e));
+
+    service.registrarExtravio(1L);
+
+    assertThat(e.getStatus()).isEqualTo(StatusEmprestimo.EXTRAVIADO);
+  }
+
+  @Test
+  void naoDeveRegistrarExtravioDeEmprestimoJaExtraviado() {
+    Emprestimo e = new Emprestimo(livro, leitor, HOJE.minusDays(5));
+    e.registrarExtravio();
+    when(repository.findById(1L)).thenReturn(Optional.of(e));
+
+    assertThatThrownBy(() -> service.registrarExtravio(1L))
+        .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  void naoDeveRegistrarExtravioDeEmprestimoDevolvido() {
+    Emprestimo e = new Emprestimo(livro, leitor, HOJE.minusDays(5));
+    e.devolver(HOJE.minusDays(1));
+    when(repository.findById(1L)).thenReturn(Optional.of(e));
+
+    assertThatThrownBy(() -> service.registrarExtravio(1L))
+        .isInstanceOf(IllegalStateException.class);
+  }
 }
