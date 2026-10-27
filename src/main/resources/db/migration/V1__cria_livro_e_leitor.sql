@@ -1,0 +1,13 @@
+CREATE TABLE livro (
+    id     BIGINT AUTO_INCREMENT PRIMARY KEY,
+    titulo VARCHAR(120) NOT NULL,
+    autor  VARCHAR(120) NOT NULL,
+    isbn   VARCHAR(20)  NOT NULL UNIQUE,
+    copias INT          NOT NULL
+);
+
+CREATE TABLE leitor (
+    id    BIGINT AUTO_INCREMENT PRIMARY KEY,
+    nome  VARCHAR(120) NOT NULL,
+    email VARCHAR(120) NOT NULL UNIQUE
+);

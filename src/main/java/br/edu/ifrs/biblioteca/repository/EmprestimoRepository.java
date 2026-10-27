@@ -1,0 +1,15 @@
+package br.edu.ifrs.biblioteca.repository;
+
+import br.edu.ifrs.biblioteca.model.Emprestimo;
+import br.edu.ifrs.biblioteca.model.StatusEmprestimo;
+import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface EmprestimoRepository extends JpaRepository<Emprestimo, Long> {
+
+  List<Emprestimo> findAllByOrderByIdAsc();
+
+  List<Emprestimo> findByStatusOrderByIdAsc(StatusEmprestimo status);
+
+  long countByLivroIdAndStatusNot(Long livroId, StatusEmprestimo status);
+}
