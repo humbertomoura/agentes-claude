@@ -18,6 +18,7 @@ API REST de uma biblioteca universitária: acervo, leitores e empréstimos. Java
 - O "hoje" vem sempre do `Clock` injetado, nunca de `LocalDate.now()` solto. Os testes fixam a data em 23/10/2026.
 - Erros de validação viram `IllegalArgumentException` (400) e transições inválidas, `IllegalStateException` (409).
 - Dinheiro usa `BigDecimal`, nunca `double`.
+- Comparações de data: use `isAfter` e `isBefore` com o limite explícito. Reescrever `hoje.isAfter(x)` como `!x.isAfter(hoje)` parece equivalente e não é: no dia exato do limite, as duas diferem. Todo limite de data tem teste no dia anterior, no dia exato e no dia seguinte.
 - Commits no padrão Conventional Commits (`feat`, `fix`, `test`, `docs`, `refactor`, `chore`).
 
 ## Não faça
