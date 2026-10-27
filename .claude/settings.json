@@ -13,7 +13,9 @@
       "Read(./.env)",
       "Read(./.env.*)",
       "Bash(rm -rf:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(curl:*)",
+      "Bash(wget:*)"
     ]
   },
   "hooks": {

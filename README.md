@@ -53,3 +53,24 @@ A partir da `modulo-7`, o projeto traz a configuração do Claude Code:
 - `skills/revisao-codigo/`: skill de revisão com checklist e um script que mede a cobertura de linhas (JaCoCo).
 - `agents/revisor.md`: subagente somente leitura, que revisa sem editar.
 - `agents/testador.md`: subagente que escreve e roda testes e nunca altera um teste existente.
+
+## Projeto concluído
+
+A versão `v1.0.0` é o resultado das oito fases do livro. As contagens de testes são da solução de referência:
+
+| Fase | O que mudou | Testes |
+|---|---|---|
+| 0 · Preparar o ambiente | projeto clonado e rodando | 22 |
+| 1 · Explorar e documentar | `docs/visao-geral.md` | 22 |
+| 2 · Contexto e plano | `CLAUDE.md` e `docs/plano-renovacao-multa.md` | 22 |
+| 3 · Implementar | renovação, multa, filtro de atrasados e migration V5 | 34 |
+| 4 · Versionar e refatorar | `Emprestimo.estaAtrasado()` e `multa()` na entidade | 38 |
+| 5 · Caçar o bug | comparação de datas corrigida, testes de borda | 41 |
+| 6 · Configurar o agente | `.claude/` com hook, skill e subagentes | 41 |
+| 7 · Proteger e entregar | restrições de comando, CI com testes e formatação, tag | 41 |
+
+## Segurança
+
+- `.claude/settings.json` nega leitura de `.env` e os comandos `rm -rf`, `git push`, `curl` e `wget`. Regras de comando restringem formas conhecidas de acesso, mas não isolam a rede: para isso, use sandbox ou um ambiente sem rede.
+- O `CLAUDE.md` orienta o agente a tratar conteúdo externo como dado.
+- O CI roda testes e `spotless:check` em todo push e pull request; o merge é sempre uma decisão humana.
