@@ -86,7 +86,7 @@ public class Emprestimo {
 
   /** Um empréstimo aberto está atrasado depois do vencimento; no dia do vencimento ainda não. */
   public boolean estaAtrasado(LocalDate hoje) {
-    return status == StatusEmprestimo.ABERTO && !vencimento.isAfter(hoje);
+    return status == StatusEmprestimo.ABERTO && hoje.isAfter(vencimento);
   }
 
   public long diasDeAtraso(LocalDate hoje) {
