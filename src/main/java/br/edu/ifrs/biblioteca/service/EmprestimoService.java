@@ -6,6 +6,7 @@ import br.edu.ifrs.biblioteca.model.Leitor;
 import br.edu.ifrs.biblioteca.model.Livro;
 import br.edu.ifrs.biblioteca.model.StatusEmprestimo;
 import br.edu.ifrs.biblioteca.repository.EmprestimoRepository;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -17,8 +18,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class EmprestimoService {
 
-  /** Todo empréstimo vence 14 dias depois da data em que foi feito. */
-  static final int PRAZO_PADRAO_DIAS = 14;
+  /** Multa por dia de atraso, com um teto por empréstimo. */
+  static final BigDecimal MULTA_POR_DIA = new BigDecimal("0.50");
+
+  static final BigDecimal MULTA_MAXIMA = new BigDecimal("20.00");
 
   private final EmprestimoRepository emprestimos;
   private final LivroService livros;
@@ -46,7 +49,11 @@ public class EmprestimoService {
   }
 
   @Transactional(readOnly = true)
-  public List<Emprestimo> listar(StatusEmprestimo status) {
+  public List<Emprestimo> listar(StatusEmprestimo status, boolean somenteAtrasados) {
+    if (somenteAtrasados) {
+      return emprestimos.findByStatusAndVencimentoBeforeOrderByIdAsc(
+          StatusEmprestimo.ABERTO, hoje());
+    }
     if (status != null) {
       return emprestimos.findByStatusOrderByIdAsc(status);
     }
@@ -60,7 +67,15 @@ public class EmprestimoService {
 
   public Emprestimo devolver(Long id) {
     Emprestimo e = buscar(id);
+    BigDecimal multa = calcularMulta(e);
     e.devolver(hoje());
+    e.registrarMulta(multa);
+    return e;
+  }
+
+  public Emprestimo renovar(Long id) {
+    Emprestimo e = buscar(id);
+    e.renovar(hoje());
     return e;
   }
 
@@ -75,9 +90,17 @@ public class EmprestimoService {
     if (e.getStatus() != StatusEmprestimo.ABERTO) {
       return 0;
     }
-    LocalDate vencimento = e.getEmprestadoEm().plusDays(PRAZO_PADRAO_DIAS);
-    long dias = ChronoUnit.DAYS.between(vencimento, hoje());
+    long dias = ChronoUnit.DAYS.between(e.getVencimento(), hoje());
     return Math.max(dias, 0);
+  }
+
+  /** Multa em aberto de um empréstimo atrasado, ou a que foi cobrada na devolução. */
+  public BigDecimal calcularMulta(Emprestimo e) {
+    if (e.getStatus() != StatusEmprestimo.ABERTO) {
+      return e.getMultaCobrada();
+    }
+    BigDecimal multa = MULTA_POR_DIA.multiply(BigDecimal.valueOf(calcularAtraso(e)));
+    return multa.min(MULTA_MAXIMA).setScale(2);
   }
 
   public boolean estaAtrasado(Emprestimo e) {

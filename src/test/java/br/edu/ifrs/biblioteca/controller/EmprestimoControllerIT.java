@@ -127,4 +127,42 @@ class EmprestimoControllerIT {
   void deveRetornar404ParaEmprestimoInexistente() throws Exception {
     mvc.perform(get("/emprestimos/9999")).andExpect(status().isNotFound());
   }
+
+  @Test
+  void deveRenovarEmprestimo() throws Exception {
+    String local = emprestar(novoLivro(1), 2);
+
+    mvc.perform(patch(local + "/renovar"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.renovacoes").value(1))
+        .andExpect(jsonPath("$.vencimento").value("2026-11-20"));
+  }
+
+  @Test
+  void deveRecusarRenovacaoDeEmprestimoAtrasado() throws Exception {
+    mvc.perform(patch("/emprestimos/3/renovar")).andExpect(status().isConflict());
+  }
+
+  @Test
+  void deveListarSomenteEmprestimosAtrasados() throws Exception {
+    mvc.perform(get("/emprestimos").param("atrasado", "true"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[*].atrasado", everyItem(is(true))))
+        .andExpect(jsonPath("$[*].status", everyItem(is("ABERTO"))));
+  }
+
+  @Test
+  void deveCalcularAMultaDoEmprestimoAtrasado() throws Exception {
+    mvc.perform(get("/emprestimos/3"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.multa").value(5.5));
+  }
+
+  @Test
+  void deveCompletarOVencimentoDosEmprestimosAntigos() throws Exception {
+    mvc.perform(get("/emprestimos/1"))
+        .andExpect(jsonPath("$.vencimento").value("2026-11-03"))
+        .andExpect(jsonPath("$.renovacoes").value(0));
+    mvc.perform(get("/emprestimos/3")).andExpect(jsonPath("$.vencimento").value("2026-10-12"));
+  }
 }

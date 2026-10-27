@@ -28,8 +28,10 @@ public class EmprestimoController {
   }
 
   @GetMapping
-  public List<EmprestimoResponse> listar(@RequestParam(required = false) StatusEmprestimo status) {
-    return service.listar(status).stream().map(this::paraResposta).toList();
+  public List<EmprestimoResponse> listar(
+      @RequestParam(required = false) StatusEmprestimo status,
+      @RequestParam(defaultValue = "false") boolean atrasado) {
+    return service.listar(status, atrasado).stream().map(this::paraResposta).toList();
   }
 
   @GetMapping("/{id}")
@@ -48,12 +50,17 @@ public class EmprestimoController {
     return paraResposta(service.devolver(id));
   }
 
+  @PatchMapping("/{id}/renovar")
+  public EmprestimoResponse renovar(@PathVariable Long id) {
+    return paraResposta(service.renovar(id));
+  }
+
   @PatchMapping("/{id}/extravio")
   public EmprestimoResponse registrarExtravio(@PathVariable Long id) {
     return paraResposta(service.registrarExtravio(id));
   }
 
   private EmprestimoResponse paraResposta(Emprestimo e) {
-    return EmprestimoResponse.de(e, service.calcularAtraso(e));
+    return EmprestimoResponse.de(e, service.calcularAtraso(e), service.calcularMulta(e));
   }
 }

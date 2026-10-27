@@ -23,9 +23,10 @@ No Windows, use `mvnw.cmd` no lugar de `./mvnw`.
 | `POST` | `/livros` | Cadastra um livro (`titulo`, `autor`, `isbn`, `copias`) |
 | `GET` | `/leitores`, `/leitores/{id}` | Lista ou busca leitores |
 | `POST` | `/leitores` | Cadastra um leitor (`nome`, `email`) |
-| `GET` | `/emprestimos`, `/emprestimos/{id}` | Lista (com `?status=`) ou busca empréstimos |
+| `GET` | `/emprestimos`, `/emprestimos/{id}` | Lista (com `?status=` ou `?atrasado=true`) ou busca empréstimos |
 | `POST` | `/emprestimos` | Empresta um livro a um leitor (`livroId`, `leitorId`) |
-| `PATCH` | `/emprestimos/{id}/devolver` | Registra a devolução |
+| `PATCH` | `/emprestimos/{id}/renovar` | Soma 14 dias ao vencimento, no máximo 2 vezes, e só se não estiver atrasado |
+| `PATCH` | `/emprestimos/{id}/devolver` | Registra a devolução e a multa cobrada, se houve atraso |
 | `PATCH` | `/emprestimos/{id}/extravio` | Registra o extravio |
 
 ## Branches

@@ -12,6 +12,7 @@ import br.edu.ifrs.biblioteca.model.Leitor;
 import br.edu.ifrs.biblioteca.model.Livro;
 import br.edu.ifrs.biblioteca.model.StatusEmprestimo;
 import br.edu.ifrs.biblioteca.repository.EmprestimoRepository;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -109,5 +110,70 @@ class EmprestimoServiceTest {
     e.devolver(HOJE.minusDays(2));
 
     assertThat(service.calcularAtraso(e)).isZero();
+  }
+
+  @Test
+  void deveRenovarSomandoQuatorzeDiasAoVencimento() {
+    Emprestimo e = new Emprestimo(livro, leitor, HOJE.minusDays(10));
+    when(repository.findById(1L)).thenReturn(Optional.of(e));
+
+    service.renovar(1L);
+
+    assertThat(e.getVencimento()).isEqualTo(HOJE.plusDays(18));
+    assertThat(e.getRenovacoes()).isEqualTo(1);
+  }
+
+  @Test
+  void naoDeveRenovarMaisDeDuasVezes() {
+    Emprestimo e = new Emprestimo(livro, leitor, HOJE.minusDays(2));
+    when(repository.findById(1L)).thenReturn(Optional.of(e));
+    service.renovar(1L);
+    service.renovar(1L);
+
+    assertThatThrownBy(() -> service.renovar(1L))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("renovações");
+  }
+
+  @Test
+  void naoDeveRenovarEmprestimoAtrasado() {
+    Emprestimo e = new Emprestimo(livro, leitor, HOJE.minusDays(20));
+    when(repository.findById(1L)).thenReturn(Optional.of(e));
+
+    assertThatThrownBy(() -> service.renovar(1L))
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("atrasado");
+  }
+
+  @Test
+  void multaEMeioRealPorDiaDeAtraso() {
+    Emprestimo e = new Emprestimo(livro, leitor, HOJE.minusDays(20));
+
+    assertThat(service.calcularMulta(e)).isEqualByComparingTo(new BigDecimal("3.00"));
+  }
+
+  @Test
+  void multaNaoPassaDoTeto() {
+    Emprestimo e = new Emprestimo(livro, leitor, HOJE.minusDays(200));
+
+    assertThat(service.calcularMulta(e)).isEqualByComparingTo(new BigDecimal("20.00"));
+  }
+
+  @Test
+  void emprestimoEmDiaNaoTemMulta() {
+    Emprestimo e = new Emprestimo(livro, leitor, HOJE.minusDays(14));
+
+    assertThat(service.calcularMulta(e)).isEqualByComparingTo(BigDecimal.ZERO);
+  }
+
+  @Test
+  void devolucaoAtrasadaRegistraAMultaCobrada() {
+    Emprestimo e = new Emprestimo(livro, leitor, HOJE.minusDays(20));
+    when(repository.findById(1L)).thenReturn(Optional.of(e));
+
+    service.devolver(1L);
+
+    assertThat(e.getMultaCobrada()).isEqualByComparingTo(new BigDecimal("3.00"));
+    assertThat(service.calcularMulta(e)).isEqualByComparingTo(new BigDecimal("3.00"));
   }
 }
