@@ -15,5 +15,8 @@ public interface EmprestimoRepository extends JpaRepository<Emprestimo, Long> {
   List<Emprestimo> findByStatusAndVencimentoBeforeOrderByIdAsc(
       StatusEmprestimo status, LocalDate data);
 
+  List<Emprestimo> findByStatusAndVencimentoBetweenOrderByIdAsc(
+      StatusEmprestimo status, LocalDate de, LocalDate ate);
+
   long countByLivroIdAndStatusNot(Long livroId, StatusEmprestimo status);
 }
