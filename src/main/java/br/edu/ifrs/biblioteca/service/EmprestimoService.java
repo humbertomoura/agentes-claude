@@ -9,7 +9,6 @@ import br.edu.ifrs.biblioteca.repository.EmprestimoRepository;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,11 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional
 public class EmprestimoService {
-
-  /** Multa por dia de atraso, com um teto por empréstimo. */
-  static final BigDecimal MULTA_POR_DIA = new BigDecimal("0.50");
-
-  static final BigDecimal MULTA_MAXIMA = new BigDecimal("20.00");
 
   private final EmprestimoRepository emprestimos;
   private final LivroService livros;
@@ -87,24 +81,15 @@ public class EmprestimoService {
 
   /** Dias de atraso de um empréstimo aberto; zero se está em dia ou já foi encerrado. */
   public long calcularAtraso(Emprestimo e) {
-    if (e.getStatus() != StatusEmprestimo.ABERTO) {
-      return 0;
-    }
-    long dias = ChronoUnit.DAYS.between(e.getVencimento(), hoje());
-    return Math.max(dias, 0);
-  }
-
-  /** Multa em aberto de um empréstimo atrasado, ou a que foi cobrada na devolução. */
-  public BigDecimal calcularMulta(Emprestimo e) {
-    if (e.getStatus() != StatusEmprestimo.ABERTO) {
-      return e.getMultaCobrada();
-    }
-    BigDecimal multa = MULTA_POR_DIA.multiply(BigDecimal.valueOf(calcularAtraso(e)));
-    return multa.min(MULTA_MAXIMA).setScale(2);
+    return e.diasDeAtraso(hoje());
   }
 
   public boolean estaAtrasado(Emprestimo e) {
-    return calcularAtraso(e) > 0;
+    return e.estaAtrasado(hoje());
+  }
+
+  public BigDecimal calcularMulta(Emprestimo e) {
+    return e.multa(hoje());
   }
 
   private LocalDate hoje() {

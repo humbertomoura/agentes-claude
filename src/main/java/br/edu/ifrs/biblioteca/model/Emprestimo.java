@@ -13,6 +13,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
 @Entity
 @Table(name = "emprestimo")
@@ -22,6 +23,11 @@ public class Emprestimo {
   public static final int PRAZO_DIAS = 14;
 
   public static final int MAX_RENOVACOES = 2;
+
+  /** Multa por dia de atraso, com um teto por empréstimo. */
+  public static final BigDecimal MULTA_POR_DIA = new BigDecimal("0.50");
+
+  public static final BigDecimal MULTA_MAXIMA = new BigDecimal("20.00");
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -68,7 +74,7 @@ public class Emprestimo {
     if (status != StatusEmprestimo.ABERTO) {
       throw new IllegalStateException("Só é possível renovar um empréstimo aberto");
     }
-    if (hoje.isAfter(vencimento)) {
+    if (estaAtrasado(hoje)) {
       throw new IllegalStateException("Empréstimo atrasado não pode ser renovado");
     }
     if (renovacoes >= MAX_RENOVACOES) {
@@ -76,6 +82,27 @@ public class Emprestimo {
     }
     vencimento = vencimento.plusDays(PRAZO_DIAS);
     renovacoes++;
+  }
+
+  /** Um empréstimo aberto está atrasado depois do vencimento; no dia do vencimento ainda não. */
+  public boolean estaAtrasado(LocalDate hoje) {
+    return status == StatusEmprestimo.ABERTO && hoje.isAfter(vencimento);
+  }
+
+  public long diasDeAtraso(LocalDate hoje) {
+    if (!estaAtrasado(hoje)) {
+      return 0;
+    }
+    return ChronoUnit.DAYS.between(vencimento, hoje);
+  }
+
+  /** Multa em aberto de um empréstimo atrasado, ou a que foi cobrada na devolução. */
+  public BigDecimal multa(LocalDate hoje) {
+    if (status != StatusEmprestimo.ABERTO) {
+      return multaCobrada;
+    }
+    BigDecimal multa = MULTA_POR_DIA.multiply(BigDecimal.valueOf(diasDeAtraso(hoje)));
+    return multa.min(MULTA_MAXIMA).setScale(2);
   }
 
   public void registrarMulta(BigDecimal multa) {
