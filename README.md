@@ -44,3 +44,12 @@ No Windows, use `mvnw.cmd` no lugar de `./mvnw`.
 | `modulo-8` | + segurança, CI no GitHub Actions e entrega (tag `v1.0.0`) |
 | `desafio-avisos` | Solução de referência do projeto completo (Capítulo 12): avisos de devolução |
 | `desafio-iniciar` | Solução de referência do exercício extra do Capítulo 9: testes da regra de extravio |
+
+## Configuração do agente (`.claude/`)
+
+A partir da `modulo-7`, o projeto traz a configuração do Claude Code:
+
+- `settings.json`: permissões (`allow` para testes e consultas ao Git, `deny` para `.env`, `rm -rf` e `git push`) e um hook que formata o código depois de cada edição.
+- `skills/revisao-codigo/`: skill de revisão com checklist e um script que mede a cobertura de linhas (JaCoCo).
+- `agents/revisor.md`: subagente somente leitura, que revisa sem editar.
+- `agents/testador.md`: subagente que escreve e roda testes e nunca altera um teste existente.
