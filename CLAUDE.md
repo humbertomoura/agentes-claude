@@ -20,6 +20,9 @@ API REST de uma biblioteca universitária: acervo, leitores e empréstimos. Java
 - Dinheiro usa `BigDecimal`, nunca `double`.
 - Comparações de data: use `isAfter` e `isBefore` com o limite explícito. Reescrever `hoje.isAfter(x)` como `!x.isAfter(hoje)` parece equivalente e não é: no dia exato do limite, as duas diferem. Todo limite de data tem teste no dia anterior, no dia exato e no dia seguinte.
 - Commits no padrão Conventional Commits (`feat`, `fix`, `test`, `docs`, `refactor`, `chore`).
+- Tarefas agendadas (`@Scheduled`): o agendador, em `scheduler/`, só chama o service; a lógica fica no service, é idempotente e usa o `Clock`.
+- Decisões de arquitetura ficam em `docs/adr/`; leia-as antes de propor mudanças estruturais.
+- Testes de integração que contam registros usam um banco próprio (`spring.datasource.url` na classe do teste) e limpam as tabelas antes de cada teste: o H2 do projeto (`DB_CLOSE_DELAY=-1`) sobrevive entre contextos e vaza dados de uma classe para outra. Os demais testes de integração criam o próprio livro e nunca assumem o estado deixado por outro teste.
 
 ## Não faça
 

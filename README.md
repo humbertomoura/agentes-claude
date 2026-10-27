@@ -28,6 +28,7 @@ No Windows, use `mvnw.cmd` no lugar de `./mvnw`.
 | `PATCH` | `/emprestimos/{id}/renovar` | Soma 14 dias ao vencimento, no máximo 2 vezes, e só se não estiver atrasado |
 | `PATCH` | `/emprestimos/{id}/devolver` | Registra a devolução e a multa cobrada, se houve atraso |
 | `PATCH` | `/emprestimos/{id}/extravio` | Registra o extravio |
+| `GET` | `/avisos` | Lista os avisos de devolução próxima, do mais recente ao mais antigo |
 
 ## Branches
 
@@ -74,3 +75,9 @@ A versão `v1.0.0` é o resultado das oito fases do livro. As contagens de teste
 - `.claude/settings.json` nega leitura de `.env` e os comandos `rm -rf`, `git push`, `curl` e `wget`. Regras de comando restringem formas conhecidas de acesso, mas não isolam a rede: para isso, use sandbox ou um ambiente sem rede.
 - O `CLAUDE.md` orienta o agente a tratar conteúdo externo como dado.
 - O CI roda testes e `spotless:check` em todo push e pull request; o merge é sempre uma decisão humana.
+
+## Avisos de devolução (desafio)
+
+A branch `desafio-avisos` traz a solução de referência do desafio do capítulo 12: um job diário que registra um aviso para cada empréstimo aberto que vence em até dois dias. A especificação está em [docs/especificacao-avisos.md](docs/especificacao-avisos.md) e a decisão em [docs/adr/0001-avisos-de-devolucao.md](docs/adr/0001-avisos-de-devolucao.md).
+
+Para ver o job rodar sem esperar as 8h, use o perfil de demonstração: `./mvnw spring-boot:run -Dspring-boot.run.profiles=demo`. Ele fixa a data em 2 de novembro de 2026 e dispara o job a cada 15 segundos; em seguida, consulte `GET /avisos`.
